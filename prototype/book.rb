@@ -29,6 +29,18 @@ class Book
   index({ author_ids: 1 })
   index({ category_ids: 1 })
 
+  before_validation do |doc|
+    doc.category_ids = doc.category_ids.map do |name|
+      name.strip!
+      tag = CategryTag.where(name: name).first
+      if tag
+        tag.id
+      else
+        tag = CategryTag.new(name: name)
+        tag.save ? tag.id : nil
+      end
+    end.select(&:present?)
+  end
 
   def authors 
     AuthorTag.find(*self.author_ids)
@@ -37,19 +49,6 @@ class Book
   def categories
     CategryTag.find(*self.category_ids)
   end
-
-  # before_validation do |record|
-  #   p category_ids
-  #   record.category_ids = category_ids.map do |t|
-  #     p t
-  #     if c = CategryTag.where(name: t.gsub(/\w/, '')).first
-  #       c.id
-  #     else
-  #       CategryTag.create(name: c).id
-  #     end
-  #   end
-  # end
-
 end
 
 
@@ -60,9 +59,9 @@ class AuthorTag
 
   index({ name: 1 }, { unique: true, name: "name_index" })
 
-  # before_validation do |record|
-  #   record.name = record.name.gsub(/\W/, '')
-  # end
+  before_validation do |record|
+    record.name = record.name.gsub(/\s/, '')
+  end
 
   
   def books
@@ -85,9 +84,9 @@ class CategryTag
 
   index({ name: 1 }, { unique: true, name: "name_index" })
 
-  # before_validation do |record|
-  #   record.name = record.name.gsub(/\w/, '')
-  # end
+  before_validation do |record|
+    record.name = record.name.strip
+  end
 
   validates :name, presence: true
 
@@ -103,7 +102,7 @@ class CategryTag
 end
 
 b1 = Book.find_or_create_by( :bname => '红楼梦',
-                             :category_ids => [CategryTag.find_or_create_by(name: '四大名著').id, CategryTag.find_or_create_by(name: '古典文学').id] )
+                             :category_ids => ['四大名著', '   古典文学', '人人都爱wadexing '] )
 
 
 p b1.authors
@@ -114,6 +113,6 @@ AuthorTag.create_indexes
 CategryTag.create_indexes
 
 p CategryTag.search('四').first
-#p AuthorTag.last.books.map(&:bname)
+p AuthorTag.last.books.map(&:bname)
 #p AuthorTag.search('西').first
 #p CategryTag.search('小说').first
