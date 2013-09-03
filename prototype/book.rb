@@ -112,6 +112,7 @@ Book.create_indexes
 AuthorTag.create_indexes
 CategryTag.create_indexes
 
+p Book.fields
 p CategryTag.search('四').first
 p AuthorTag.last.books.map(&:bname)
 #p AuthorTag.search('西').first
