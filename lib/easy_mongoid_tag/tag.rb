@@ -27,16 +27,33 @@ module  EasyMongoidTag
       self.tag_items << tag_name
       index({ field_name => 1 })
 
-      generate_tag_class(tag_name)
+      tag_class = generate_tag_class(tag_name)
 
-      # self.class_eval do
-      #   define_method(Helper.tag_list_name(tag_name)) do
-          
-      #   end
-      # end
+      self.instance_eval do
+        define_method Helper.tags_method_name(tag_name) do
+          tag_class.find(*self.send(field_name))
+        end
+      end
+
+      before_validation do |doc|
+        doc.send("#{field_name}=",
+                 doc[tag_name].map do |title|
+                   title.strip!
+                   tag = tag_class.where(title: title).first
+                   if tag
+                     tag.id
+                   else
+                     tag = tag_class.new(title: title)
+                     tag.save ? tag.id : nil
+                   end
+                 end.select(&:present?)) if doc[tag_name]
+      end
     end
 
     def easy_tags *tag_names
+      tag_names.each do |tag_name|
+        easy_tag tag_name
+      end
     end
 
     # 生成标签类
@@ -48,19 +65,29 @@ module  EasyMongoidTag
 
       if Helper.class_existed?(tag_class_name)
         raise(RuntimeError, "Class #{tag_class_name} already existed!")
+        return
       else
         # model 类的
         main_class_name = self.name
-        Object.const_set(tag_class_name, Class.new do
+        Object.const_set(tag_class_name,
+                         Class.new do
                            include Mongoid::Document
+                           include Mongoid::Timestamps::Created
+
+                           store_in collection: tag_class_name.tableize
+
                            field :title, type: String
+                           index({ title: 1 }, { unique: true })
 
                            define_method main_class_name.downcase.pluralize do
-                             self.class.where(field => self.id)
+                             
+                             Object.const_get(main_class_name).where(field_name => self.id)
                            end
 
-                           class << self
-                             
+                           class << self 
+                             def search key_word
+                               self.any_of(title: /.*#{key_word}.*/)
+                             end
                            end
                          end)
       end
@@ -74,10 +101,12 @@ module  EasyMongoidTag
 
     class << self
 
-      # tag_name 是复数数形式
-      # filed_name = tag_name的单数形式 + "_ids"
       def field_name tag_name
-        "#{tag_name.to_s.singularize}_ids".to_sym
+        tag_name.to_sym
+      end
+
+      def tags_method_name tag_name
+        "#{tag_name.to_s.singularize}_tags".to_sym
       end
 
       # tags_list_name = 'list_' + tag_name
@@ -91,7 +120,8 @@ module  EasyMongoidTag
         tag_name.to_s.classify + 'Tag'
       end
 
-      # 
+      # 是否已经存在 类
+      # @param [ String ] 类名
       def class_existed? class_name
         klass = Module.const_get(class_name)
         return klass.is_a?(Class)

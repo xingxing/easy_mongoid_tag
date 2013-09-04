@@ -1,4 +1,4 @@
-development:
+test:
   sessions:
     default:
       database: easy_mongoid_tag

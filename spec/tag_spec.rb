@@ -2,23 +2,21 @@
 require 'spec_helper'
 
 describe EasyMongoidTag do
-
-
-  describe 'after included this module' do
-    context 'when model class is not A Mongoid::Docutment' do
-      it 'should raise a error' do
+  describe '混入此模块' do
+    context '当 混入非Mongoid::Document类' do
+      it '应 抛出异常' do
         expect { 
           class P
             include EasyMongoidTag
           end
         }.to raise_exception(RuntimeError,
-                                   "EasyMongoidTag is mixined A non-mongoid_document")
+                             "EasyMongoidTag is mixined A non-mongoid_document")
         
       end
     end
 
     
-    context "when model class is A Mongoid::Docutment" do
+    context "当 混入Mongoid::Docutment类" do
       before(:all) do
         class Book
           include Mongoid::Document
@@ -27,25 +25,28 @@ describe EasyMongoidTag do
           easy_tag :authors
         end
       end
+      
+      describe "混入类" do
+        it "应 含有类宏" do
+          Book.should respond_to(:easy_tag)
+        end
 
-      it "should can response easy_tag" do
-        Book.should respond_to(:easy_tag)
-      end
+        it "应 有Array型标签字段" do
+          Book.should have_field(:authors).of_type(Array)
+        end
 
-      it "should has author_tags field" do
-        Book.fields.keys.should include('author_ids')
-      end
+        it "应 在class属性tag_items中包含标签名称" do
+          Book.tag_items.should include(:authors)
+        end
 
-      it "author_ids's type should be Array" do
-        Book.fields['author_ids'].type.should be Array
-      end
+        it "应 在标签字段上设置索引" do
+          Book.should have_index_for(authors: 1)
+        end
 
-      it "should stores at class attributes" do
-        Book.tag_items.should include(:authors)
-      end
+        it "应 有与tag同名的实例方法" do
+          Book.new.should respond_to(:author_tags)
+        end
 
-      it "should set a index on tag field" do
-        Book.should have_index_for(author_ids: 1)
       end
 
       describe "生成标签类" do
@@ -65,24 +66,30 @@ describe EasyMongoidTag do
         end
 
         context "When 标签类不存在" do
-          it "should genrate tag class" do
+          it "应 生成标签类" do
             AuthorTag
           end
 
-          it "标签类 应该是一个Mongoid::Document" do
-            AuthorTag.included_modules.should include(Mongoid::Document)
-          end
+          describe "标签类" do
+            it "应 是一个Mongoid::Document" do
+              AuthorTag.included_modules.should include(Mongoid::Document)
+            end
           
-          it "标签类应该有 一个title field" do
-            AuthorTag.fields.keys.should include('title')
-          end
+            it "应 有 一个String型的title field " do
+              AuthorTag.should have_field(:title).of_type(String)
+            end
 
-          it "title 的type 应该是String" do
-            AuthorTag.fields['title'].type.should be String
-          end
+            it "应 在title字段上设置 唯一性索引" do
+              AuthorTag.should have_index_for(title: 1).with_options(unique: true)
+            end
 
-          it "应该包含一个 名为books的实例方法" do
-            AuthorTag.new.should respond_to(:books)
+            it "应 包含一个 反查模型的实例方法" do
+              AuthorTag.new.should respond_to(:books)
+            end
+
+            it "应 包含一个 可用于模糊搜索的类方法" do
+              AuthorTag.should respond_to(:search)
+            end
           end
         end
       end
