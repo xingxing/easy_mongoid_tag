@@ -2,6 +2,7 @@
 require 'spec_helper'
 
 describe "功能" do
+
   before(:all) do
     Mongoid.load!("/Users/wade/RubyLab/easy_mongoid_tag/spec/mongodb.yml", :test)
 
@@ -30,6 +31,13 @@ describe "功能" do
 
   it "应 标签搜索" do
     TestTag.search('曹').map(&:title).should include('曹雪芹', '曹沾')
+  end
+
+  
+  it "当标签被删除 应 删除模型字段中的相应引用" do
+    ge = TestTag.find_by(title: '高 鹗')
+    ge.destroy
+    @book1.reload.tests.should_not include(ge.id)
   end
 
 end

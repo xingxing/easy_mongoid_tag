@@ -37,16 +37,20 @@ module  EasyMongoidTag
 
       before_validation do |doc|
         doc.send("#{field_name}=",
-                 doc[tag_name].map do |title|
-                   title.strip!
-                   tag = tag_class.where(title: title).first
-                   if tag
-                     tag.id
+                 doc[tag_name].map do |title_or_object_id|
+                   if title_or_object_id.is_a? Moped::BSON::ObjectId
+                     title_or_object_id
                    else
-                     tag = tag_class.new(title: title)
-                     tag.save ? tag.id : nil
+                     title_or_object_id.strip!
+                     tag = tag_class.where(title: title_or_object_id).first
+                     if tag
+                       tag.id
+                     else
+                       tag = tag_class.new(title: title_or_object_id)
+                       tag.save ? tag.id : nil
+                     end
                    end
-                 end.select(&:present?)) if doc[tag_name]
+                 end.select(&:present?)) if doc[tag_name] 
       end
     end
 
@@ -80,7 +84,6 @@ module  EasyMongoidTag
                            index({ title: 1 }, { unique: true })
 
                            define_method main_class_name.downcase.pluralize do
-                             
                              Object.const_get(main_class_name).where(field_name => self.id)
                            end
 
@@ -89,7 +92,21 @@ module  EasyMongoidTag
                                self.any_of(title: /.*#{key_word}.*/)
                              end
                            end
-                         end)
+
+                           before_validation do |record|
+                             record.title = record.title.strip
+                           end
+                           
+                           after_destroy do |record|
+                             record.send(main_class_name.downcase.pluralize).each do |model|
+                               Object.const_get(main_class_name).skip_callback(:validation, :before)
+                               model.send("#{field_name}=", model.send(field_name).reject{|t| t == record.id } )
+                               model.save
+                               Object.const_get(main_class_name).set_callback(:validation, :before)
+                             end
+                           end
+
+                end)
       end
     end
   end
