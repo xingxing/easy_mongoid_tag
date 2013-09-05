@@ -1,0 +1,3 @@
+h1. easy_mongoid_tag
+
+

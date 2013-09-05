@@ -1,5 +1,11 @@
+PATH
+  remote: .
+  specs:
+    easy_mongoid_tag (0.0.1)
+      mongoid (~> 3.1.0)
+
 GEM
-  remote: http://rubygems.org/
+  remote: http://ruby.taobao.org/
   specs:
     activemodel (3.2.14)
       activesupport (= 3.2.14)
@@ -74,10 +80,10 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  guard
-  guard-rspec
-  guard-spork
-  mongoid
-  mongoid-rspec
-  rspec
-  terminal-notifier-guard
+  easy_mongoid_tag!
+  guard (~> 1.8.0)
+  guard-rspec (~> 3.0.0)
+  guard-spork (~> 1.5.1)
+  mongoid-rspec (~> 1.9.0)
+  rspec (~> 2.14.1)
+  terminal-notifier-guard (~> 1.5.3)
