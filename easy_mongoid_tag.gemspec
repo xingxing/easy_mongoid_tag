@@ -5,8 +5,8 @@ Gem::Specification.new do |s|
   s.name        = 'easy_mongoid_tag'
   s.version     = EasyMongoidTag::VERSION
   s.date        = '2013-09-05'
-  s.summary     = ""
-  s.description = "Retrieves contact list of email"
+  s.summary     = "粗糙的mongid tag"
+  s.description = "粗糙的mongid tag"
   s.authors     = ["Wade Xing"]
   s.email       = ['iamxingxing@gmail.com']
   s.files       = `git ls-files`.split($\)
