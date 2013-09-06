@@ -1,0 +1,6 @@
+development:
+  sessions:
+    default:
+      database: easy_mongoid_tag
+      hosts:
+        - localhost:27017
