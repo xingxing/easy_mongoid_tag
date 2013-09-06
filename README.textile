@@ -1,3 +1,34 @@
-h1. easy_mongoid_tag
+h1. 粗糙的MONGOID TAG
+
+h3. 设计目的：
+
+# 不用动脑子想tag的设计
+# 单向对基于tag查询实体的优化
+
+h3. 基于以下假设
+
+# 根据标签名称，查找实体的情况频繁于根据实体查找tags
+# 实体间不共享一类 tag 
+
+h3. 用法
+
+```ruby
+	
+    class Model
+      include Mongoid::Document
+      include EasyMongoidTag
+      
+      field :bname, as: :book_name, type: String
+      easy_tags :tests
+    end
+
+    book1 = Model.create(bname: '红楼梦', :tests => ['曹雪芹 ', ' 高 鹗 '])
+    book2 = Model.create(bname: '石头记', :tests => ['曹沾', '高 鹗'])
 
 
+    book1.test_tags
+    TestTag.find_by(title: '曹雪芹')
+    TestTag.search('曹')
+    
+
+```
