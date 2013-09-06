@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.version     = EasyMongoidTag::VERSION
   s.date        = '2013-09-05'
   s.summary     = "粗糙的mongid tag"
-  s.description = "粗糙的mongid tag"
+  s.description = "实现实体和标签间的N2N关系，对基于tag查询实体的单向优化"
   s.authors     = ["Wade Xing"]
   s.email       = ['iamxingxing@gmail.com']
   s.files       = `git ls-files`.split($\)
